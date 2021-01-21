@@ -1,4 +1,5 @@
-from utils import*
+from utils import *
+#from extract_features import extractFeaturesTest
 # =============================================================================
 # source_dir
 # =============================================================================
@@ -29,6 +30,7 @@ X = min_max_scaler.fit_transform(X)
 # =============================================================================
 transformer = KernelPCA(n_components=64, kernel='linear')
 X = transformer.fit_transform(X)
+print("X shape after KernelPCA: ",X.shape)
 # =============================================================================
 # devide data into test,train, and validation sets
 # =============================================================================
@@ -48,9 +50,11 @@ show_model(model)
 # =============================================================================
 opt = tf.keras.optimizers.Adam(lr=0.001)
 criterion = tf.keras.losses.categorical_crossentropy
-model.compile(optimizer=opt, loss=criterion,metrics=[keras.metrics.categorical_accuracy])
+model.compile(optimizer=opt, loss=criterion,metrics=[keras.metrics.categorical_accuracy,keras.metrics.Recall(name="recall"),keras.metrics.Precision(name="precision")])
 model_early_stopping=EarlyStopping(monitor='val_loss', min_delta=.005, patience=10, verbose=1)# early stopping settings
 model.fit(X_train, y_train,batch_size = 2,epochs=100, validation_data = (X_val, y_val),callbacks=[model_early_stopping])
+
+model.save('saved_model/my_model')
 
 fig = plt.figure()
 plt.plot(model.history.history['val_loss'], 'r', model.history.history['loss'], 'b')
@@ -62,6 +66,8 @@ plt.savefig('training_loss.jpg',dpi=300)
 # evaluate model
 # =============================================================================
 Y_Score=model.predict(X_test)
+print("X_test: ",X_test)
+print("Y_score: ",Y_Score)
 y_pred = np.argmax(Y_Score, axis=1)
 cm=confusion_matrix(np.argmax(y_test, axis=1),y_pred)
 print(cm)
@@ -126,7 +132,6 @@ plt.title('Receiver operating characteristic')
 plt.grid(1)
 plt.legend(loc="lower right")
 plt.savefig('roc_pneumonia.jpg',dpi=300)
-
 
 
 
